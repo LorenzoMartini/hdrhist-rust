@@ -77,16 +77,14 @@ impl HDRHist {
         let mut curr = prev;
 
         [0.75, 0.50, 0.25, 0.05, 0.01, 0.001, 0.0].into_iter().map(move |p| {
-            if curr.0 > *p {
-                // Find first element such that fraction <= p in ccdf
-                // and take the value from the previous bucket
-                while curr.0 > *p {
-                    if let Some(next) = ccdf.by_ref().next().map(|(value, fraction, _)| (fraction, value)) {
-                        prev = curr;
-                        curr = next;
-                    } else {
-                        break;
-                    }
+            // Find first element such that fraction <= p in ccdf
+            // and take the value from the previous bucket
+            while curr.0 > *p {
+                if let Some(next) = ccdf.by_ref().next().map(|(value, fraction, _)| (fraction, value)) {
+                    prev = curr;
+                    curr = next;
+                } else {
+                    break;
                 }
             }
             (1f64 - p, prev.1)
