@@ -70,14 +70,14 @@ impl HDRHist {
     /// Quantiles are estimated
     pub fn summary<'a>(&'a self) -> impl Iterator<Item=(f64, u64)>+'a {
         let mut ccdf = self.ccdf();
+        // prev and curr: pair(frequency, value)
+        // We need to keep both as when we find a matching element in the ccdf we need to return
+        // the value from the previous bucket
         let mut prev = (1.0, 0);
         let mut curr = prev;
+
         [0.75, 0.50, 0.25, 0.05, 0.01, 0.001, 0.0].into_iter().map(move |p| {
-            let (prev_f, prev_v) = prev;
-            let (curr_f, curr_v) = curr;
-            if curr_f <= *p {
-                (1f64 - p, prev_v)
-            } else {
+            if curr.0 > *p {
                 // Find first element such that fraction <= p in ccdf
                 // and take the value from the previous bucket
                 while curr.0 > *p {
@@ -88,9 +88,8 @@ impl HDRHist {
                         break;
                     }
                 }
-                let (_, value) = prev;
-                (1f64 - p, value)
             }
+            (1f64 - p, prev.1)
         })
     }
 
