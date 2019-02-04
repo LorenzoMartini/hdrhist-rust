@@ -80,7 +80,7 @@ impl HDRHist {
             } else {
                 // Find first element such that fraction <= p in ccdf
                 // and take the value from the previous bucket
-                while curr_f > *p {
+                while curr.0 > *p {
                     if let Some(next) = ccdf.by_ref().next().map(|(value, fraction, _)| (fraction, value)) {
                         prev = curr;
                         curr = next;
