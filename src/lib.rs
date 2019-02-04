@@ -71,16 +71,22 @@ impl HDRHist {
     pub fn summary<'a>(&'a self) -> impl Iterator<Item=(f64, u64)>+'a {
         let mut ccdf = self.ccdf();
         let mut prev = (1.0, 0);
+        let mut curr = prev;
         [0.75, 0.50, 0.25, 0.05, 0.01, 0.001, 0.0].into_iter().map(move |p| {
             let (prev_f, prev_v) = prev;
-            if prev_f <= *p {
+            let (curr_f, curr_v) = curr;
+            if curr_f <= *p {
                 (1f64 - p, prev_v)
             } else {
-                if *p == 0.0 {
-                    prev = ccdf.by_ref().last().map(|(v, f, _)| (f, v)).unwrap_or(prev);
-                } else {
-                    prev = ccdf.by_ref().find(|&(_, fraction, _)| fraction <= *p)
-                        .map(|(v, f, _)| (f, v)).unwrap_or(prev);
+                // Find first element such that fraction <= p in ccdf
+                // and take the value from the previous bucket
+                while curr_f > *p {
+                    if let Some(next) = ccdf.by_ref().next().map(|(value, fraction, _)| (fraction, value)) {
+                        prev = curr;
+                        curr = next;
+                    } else {
+                        break;
+                    }
                 }
                 let (_, value) = prev;
                 (1f64 - p, value)
